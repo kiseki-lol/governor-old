@@ -43,7 +43,6 @@ class ActiveServer():
     if "ServerName" not in data:
       print("missing servername")
       return False 
-    print(_json)
     if "Host" not in data:
       print("missing host")
       return False
