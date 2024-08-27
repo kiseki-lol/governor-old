@@ -30,14 +30,13 @@ class Serve(BaseHTTPRequestHandler):
           canHostServers = False
       obj = { "ActiveServers": [], "MasterMotd": "", "SpecialMotd": "", "Authentication": { "CanHostServers": canHostServers, "CanReadMasterServer": canSeeServers } }
       if canSeeServers:
-        for server in active_servers: 
+        for server in list(active_servers.keys()): 
           _obj = active_servers[server]
           if _obj.ttl < datetime.now().timestamp():
-            active_servers.pop(server, None)
+            del active_servers[server]
           else:
             t = json.loads(_obj.toJson())
             obj["ActiveServers"].append(t)
-      print(json.dumps(obj))
       self.send_response(200)
       self.end_headers()
       self.wfile.write(bytes(json.dumps(obj), "utf-8"))
