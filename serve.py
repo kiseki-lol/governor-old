@@ -1,7 +1,10 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from data import ActiveServer
 from datetime import datetime
+
+import signal
 import json
+import sys
 
 # leave keys empty to allow everyone to use that feature
 # good practice to set announce key to something
@@ -13,6 +16,13 @@ active_servers = {}
 
 class Serve(BaseHTTPRequestHandler):
   def do_GET(self):
+    if self.path == '/flags':
+      self.send_response(200)
+      self.end_headers()
+      with open('flags.json') as f:
+        self.wfile.write(bytes(json.dumps(json.load(f)), "utf-8"))
+
+      return
     if self.path == '/ping':
       canSeeServers = True
       canHostServers = True
@@ -40,13 +50,19 @@ class Serve(BaseHTTPRequestHandler):
       self.send_response(200)
       self.end_headers()
       self.wfile.write(bytes(json.dumps(obj), "utf-8"))
+
+      return
     elif self.path == '/':
       self.send_response(200)
       self.end_headers()
-      self.wfile.write(bytes("Hi", "utf-8"))
+      self.wfile.write(bytes(json.dumps({ "Response": "ok" }), "utf-8"))
+
+      return
     else:
       self.send_response(404)
       self.end_headers()
+
+      return
 
   def do_POST(self):
     if self.path == '/announce':
@@ -69,12 +85,19 @@ class Serve(BaseHTTPRequestHandler):
         self.end_headers()
 
       self.wfile.write(bytes("OK", "utf-8"))
-    else:
-      self.send_response(404, "Bad post.. You Suck")
-      self.end_headers()
 
+      return
+    else:
+      self.send_response(400, "Bad Request")
+      self.end_headers()
+      return
+
+def signal_handler(sig, frame):
+  print("\ngracefully shutting down the server...")
+  sys.exit(0)
 
 if __name__ == "__main__":
-  print("Starting master server on port ", 7767)
+  signal.signal(signal.SIGINT, signal_handler)
+  print("starting master server on port", 7767)
   httpd = HTTPServer(('localhost', 7767), Serve)
   httpd.serve_forever()
