@@ -1,11 +1,12 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from data import ActiveServer
 from datetime import datetime
+from io import BytesIO
 
 import signal
 import json
 import sys
-
+import gzip
 # leave keys empty to allow everyone to use that feature
 # good practice to set announce key to something
 
@@ -38,7 +39,7 @@ class Serve(BaseHTTPRequestHandler):
           canSeeServers = False
         if ANNOUNCE_KEY != self.headers["Authorization"]:
           canHostServers = False
-      obj = { "ActiveServers": [], "MasterMotd": "", "SpecialMotd": "", "Authentication": { "CanHostServers": canHostServers, "CanReadMasterServer": canSeeServers } }
+      obj = { "ActiveServers": [], "MasterMotd": "This is the official Aya Governor instance.", "SpecialMotd": "", "Authentication": { "CanHostServers": canHostServers, "CanReadMasterServer": canSeeServers } }
       if canSeeServers:
         for server in list(active_servers.keys()): 
           _obj = active_servers[server]
@@ -67,8 +68,21 @@ class Serve(BaseHTTPRequestHandler):
   def do_POST(self):
     if self.path == '/announce':
       content_length = int(self.headers['Content-Length'])
+      content_encoding = self.headers.get('Content-Encoding', '')
+      
       data = self.rfile.read(content_length)
       
+      if content_encoding == 'gzip':
+        try:
+          data = gzip.decompress(data)
+        except Exception as e:
+          self.send_response(400, "Bad Request - Failed to decompress gzip")
+          self.end_headers()
+          self.wfile.write(bytes("Failed to decompress gzip data", "utf-8"))
+          return
+
+      print(data);
+
       aserv = ActiveServer()
       ok = aserv.fromJson(data)
       if ok:
