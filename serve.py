@@ -39,7 +39,7 @@ class Serve(BaseHTTPRequestHandler):
           canSeeServers = False
         if ANNOUNCE_KEY != self.headers["Authorization"]:
           canHostServers = False
-      obj = { "ActiveServers": [], "MasterMotd": "This is the official Aya Governor instance.", "SpecialMotd": "", "Authentication": { "CanHostServers": canHostServers, "CanReadMasterServer": canSeeServers } }
+      obj = { "ActiveServers": [], "MasterMotd": "This is the official Aya TuahGovernor instance.", "SpecialMotd": "", "Authentication": { "CanHostServers": canHostServers, "CanReadMasterServer": canSeeServers } }
       if canSeeServers:
         for server in list(active_servers.keys()): 
           _obj = active_servers[server]
