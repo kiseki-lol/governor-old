@@ -1,4 +1,6 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 from data import ActiveServer
 from datetime import datetime
 from io import BytesIO
@@ -15,14 +17,23 @@ ANNOUNCE_KEY = "" # has ping permissions
 
 active_servers = {}
 
-class Serve(BaseHTTPRequestHandler):
+class Serve(BaseHTTPRequestHandler):  
   def do_GET(self):
-    if self.path == '/flags':
+    parsed_url = urlparse(self.path)
+
+    if self.path == '/Setting/QuietGet/ClientAppSettings' or self.path == '/Setting/QuietGet/ClientSharedSettings' or self.path == '/Setting/QuietGet/RCCService' or self.path == '/Setting/QuietGet/RccThumbnailers':
       self.send_response(200)
       self.end_headers()
       with open('flags.json') as f:
         self.wfile.write(bytes(json.dumps(json.load(f)), "utf-8"))
 
+      return
+    if self.path[0:7] == '/asset/' or self.path[0:7] == '/Asset/' or self.path[0:9] == '/v1/asset':
+      captured_value = parse_qs(parsed_url.query)['id'][0]
+
+      self.send_response(301)
+      self.send_header('Location', 'https://assetdelivery.roblox.com/v1/asset/?id=' + captured_value)
+      self.end_headers()
       return
     if self.path == '/ping':
       canSeeServers = True
